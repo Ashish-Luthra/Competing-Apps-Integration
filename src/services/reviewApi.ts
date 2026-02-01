@@ -6,6 +6,12 @@
  */
 
 import type { IngestionStatus } from '@/types/app';
+import {
+  API_BASE_URL,
+  INGEST_APP_PATH,
+  REFRESH_APP_PATH,
+  INGEST_ALL_PATH,
+} from '@/app/config/api';
 
 export interface IngestionResult {
   records: number;
@@ -30,26 +36,29 @@ export function generateAppId(): string {
   return `app_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
-/**
- * Formats a date for display in the table
- */
-function formatIngestionDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+function buildUrl(pathTemplate: string, params: Record<string, string>): string {
+  const path = Object.entries(params).reduce((current, [key, value]) => {
+    return current.replaceAll(`{${key}}`, encodeURIComponent(value));
+  }, pathTemplate);
+  return `${API_BASE_URL}${path}`;
 }
 
-/**
- * Simulates network delay (1-3 seconds)
- */
-function simulateNetworkDelay(): Promise<void> {
-  const delay = 1000 + Math.random() * 2000;
-  return new Promise(resolve => setTimeout(resolve, delay));
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const message = errorData?.errors?.[0]?.detail || `API request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return response.json() as Promise<T>;
 }
 
 /**
@@ -62,26 +71,12 @@ function simulateNetworkDelay(): Promise<void> {
  * @returns Promise with ingestion result (record count, status, timestamp)
  */
 export async function ingestReviewsForApp(appInfo: AppInfo): Promise<IngestionResult> {
-  // Simulate network delay
-  await simulateNetworkDelay();
-
-  // Simulate occasional failures (5% chance)
-  if (Math.random() < 0.05) {
-    return {
-      records: 0,
-      status: 'Failed',
-      lastIngestion: formatIngestionDate(new Date())
-    };
-  }
-
-  // Return successful result with random record count (10-35)
-  const records = Math.floor(Math.random() * 26) + 10;
-
-  return {
-    records,
-    status: 'Completed',
-    lastIngestion: formatIngestionDate(new Date())
-  };
+  const url = buildUrl(INGEST_APP_PATH, { appId: appInfo.id });
+  return postJson<IngestionResult>(url, {
+    appId: appInfo.id,
+    appName: appInfo.appName,
+    country: appInfo.country,
+  });
 }
 
 /**
@@ -94,26 +89,8 @@ export async function ingestReviewsForApp(appInfo: AppInfo): Promise<IngestionRe
  * @returns Promise with ingestion result
  */
 export async function refreshAppReviews(appId: string): Promise<IngestionResult> {
-  // Simulate network delay
-  await simulateNetworkDelay();
-
-  // Simulate occasional failures (5% chance)
-  if (Math.random() < 0.05) {
-    return {
-      records: 0,
-      status: 'Failed',
-      lastIngestion: formatIngestionDate(new Date())
-    };
-  }
-
-  // Return successful result with random record count (10-35)
-  const records = Math.floor(Math.random() * 26) + 10;
-
-  return {
-    records,
-    status: 'Completed',
-    lastIngestion: formatIngestionDate(new Date())
-  };
+  const url = buildUrl(REFRESH_APP_PATH, { appId });
+  return postJson<IngestionResult>(url, { appId });
 }
 
 /**
@@ -128,25 +105,7 @@ export async function refreshAppReviews(appId: string): Promise<IngestionResult>
 export async function ingestReviewsForAllApps(
   appIds: string[]
 ): Promise<Map<string, IngestionResult>> {
-  const results = new Map<string, IngestionResult>();
-
-  const buildFailedResult = (): IngestionResult => ({
-    records: 0,
-    status: 'Failed',
-    lastIngestion: formatIngestionDate(new Date())
-  });
-
-  // Process all apps in parallel, but isolate failures per app
-  const promises = appIds.map(async (appId) => {
-    try {
-      const result = await refreshAppReviews(appId);
-      results.set(appId, result);
-    } catch {
-      results.set(appId, buildFailedResult());
-    }
-  });
-
-  await Promise.all(promises);
-
-  return results;
+  const url = buildUrl(INGEST_ALL_PATH, {});
+  const response = await postJson<Record<string, IngestionResult>>(url, { appIds });
+  return new Map(Object.entries(response));
 }
