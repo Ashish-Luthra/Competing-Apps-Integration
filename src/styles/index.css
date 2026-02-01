@@ -1,3 +1,29 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+:root {
+  --frame-width: 1440px;
+  --nav-expanded-width: 240px;
+  --nav-collapsed-width: 80px;
+  --page-gutter: 24px;
+  --page-padding-y: 32px;
+  --content-max-width: 1120px;
+}
+
+.page-frame {
+  max-width: var(--frame-width);
+  margin: 0 auto;
+}
+
+.page-frame--nav-expanded {
+  padding: var(--page-padding-y) var(--page-gutter) var(--page-padding-y) var(--nav-expanded-width);
+}
+
+.page-frame--nav-collapsed {
+  padding: var(--page-padding-y) var(--page-gutter) var(--page-padding-y) var(--nav-collapsed-width);
+}
+
+.page-content {
+  max-width: var(--content-max-width);
+}

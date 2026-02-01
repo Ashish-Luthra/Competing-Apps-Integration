@@ -80,18 +80,25 @@ export default function App() {
   const handleGetReviews = useCallback(async () => {
     if (apps.length === 0) return;
 
+    const appIds = apps.map(app => app.id);
+    const appIdSet = new Set(appIds);
     setIsLoadingAll(true);
 
     // Update all apps to "In Progress"
     setApps(currentApps =>
-      currentApps.map(app => ({ ...app, status: 'In Progress' as const }))
+      currentApps.map(app =>
+        appIdSet.has(app.id) ? { ...app, status: 'In Progress' as const } : app
+      )
     );
 
     try {
-      const results = await ingestReviewsForAllApps(apps.map(app => app.id));
+      const results = await ingestReviewsForAllApps(appIds);
 
       setApps(currentApps =>
         currentApps.map(app => {
+          if (!appIdSet.has(app.id)) {
+            return app;
+          }
           const result = results.get(app.id);
           if (result) {
             return {
@@ -106,7 +113,9 @@ export default function App() {
       );
     } catch {
       setApps(currentApps =>
-        currentApps.map(app => ({ ...app, status: 'Failed' as const }))
+        currentApps.map(app =>
+          appIdSet.has(app.id) ? { ...app, status: 'Failed' as const } : app
+        )
       );
     } finally {
       setIsLoadingAll(false);
@@ -119,28 +128,30 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-[1140px] mx-auto">
-        <CompetitionAppsHeader />
+    <div className="min-h-screen bg-white">
+      <div className="page-frame page-frame--nav-expanded">
+        <div className="page-content">
+          <CompetitionAppsHeader />
 
-        <p className="font-['Manrope'] text-base leading-7 tracking-[-0.176px] text-[#636b75] mb-8">
-          Add a list of apps which you want Allyvate to monitor for reviews. New reviews are fetched daily. You can also trigger the fetch manually.
-        </p>
+          <p className="font-['Inter'] text-sm leading-6 tracking-[-0.14px] text-[#667085] mb-6">
+            Add a list of apps which you want Allyvate to monitor for reviews. New reviews are fetched daily. You can also trigger the fetch manually.
+          </p>
 
-        <div className="w-full h-px bg-[#8798AD] mb-8" />
+          <div className="w-full h-px bg-[#c9d6ef] mb-7" />
 
-        <div className="space-y-12">
-          <SelectAppsCard
-            onAddApp={handleAddApp}
-            onGetReviews={handleGetReviews}
-            isLoadingAll={isLoadingAll}
-          />
+          <div className="space-y-10">
+            <SelectAppsCard
+              onAddApp={handleAddApp}
+              onGetReviews={handleGetReviews}
+              isLoadingAll={isLoadingAll}
+            />
 
-          <DataIngestionTable
-            apps={apps}
-            onRefresh={handleRefresh}
-            onDelete={handleDelete}
-          />
+            <DataIngestionTable
+              apps={apps}
+              onRefresh={handleRefresh}
+              onDelete={handleDelete}
+            />
+          </div>
         </div>
       </div>
     </div>

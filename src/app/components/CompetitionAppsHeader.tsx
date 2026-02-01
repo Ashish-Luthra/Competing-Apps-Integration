@@ -3,16 +3,16 @@ import svgPaths from "@/imports/svg-sverjcyarl";
 
 export function CompetitionAppsHeader() {
   return (
-    <div className="flex items-center gap-6 mb-8">
+    <div className="flex items-center gap-5 mb-4">
       <button 
-        className="flex items-center justify-center w-7 h-7 hover:bg-gray-100 rounded transition-colors"
+        className="flex items-center justify-center w-6 h-6 text-[#0f2744] hover:text-[#1b3b63] transition-colors"
         aria-label="Go back"
       >
-        <ChevronLeft className="w-6 h-6 text-[#0F2744]" />
+        <ChevronLeft className="w-5 h-5" />
       </button>
       
-      <div className="flex items-center gap-7">
-        <div className="bg-[#418afe] border border-[#95b5fe] rounded-sm w-9 h-9 relative overflow-hidden">
+      <div className="flex items-center gap-3">
+        <div className="bg-[#418afe] border border-[#95b5fe] rounded-sm w-8 h-8 relative overflow-hidden">
           <div className="absolute inset-[10.94%_3.12%_15.63%_3.13%]">
             <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 33.7501 26.4375">
               <g>
@@ -38,7 +38,7 @@ export function CompetitionAppsHeader() {
           </div>
         </div>
         
-        <h1 className="font-['Inter'] font-medium text-[28px] leading-[48px] tracking-[-0.308px] text-black">
+        <h1 className="font-['Inter'] font-medium text-[22px] leading-8 tracking-[-0.2px] text-black">
           Competition
         </h1>
       </div>

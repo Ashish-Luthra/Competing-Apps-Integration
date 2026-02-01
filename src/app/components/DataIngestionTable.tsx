@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { RefreshCw, Trash2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { RefreshCw, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AppData, IngestionStatus } from '@/types/app';
 
 // Re-export for backward compatibility
@@ -9,24 +9,6 @@ interface DataIngestionTableProps {
   apps: AppData[];
   onRefresh: (id: string) => void;
   onDelete: (id: string) => void;
-}
-
-function StatusBadge({ status }: { status: IngestionStatus }) {
-  const statusStyles: Record<IngestionStatus, string> = {
-    'Pending': 'bg-gray-100 text-gray-700',
-    'In Progress': 'bg-blue-100 text-blue-700',
-    'Completed': 'bg-green-100 text-green-700',
-    'Failed': 'bg-red-100 text-red-700'
-  };
-
-  return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[status]}`}>
-      {status === 'In Progress' && (
-        <Loader2 className="w-3 h-3 animate-spin" />
-      )}
-      {status}
-    </span>
-  );
 }
 
 export function DataIngestionTable({ apps, onRefresh, onDelete }: DataIngestionTableProps) {
@@ -40,6 +22,10 @@ export function DataIngestionTable({ apps, onRefresh, onDelete }: DataIngestionT
   const endIndex = Math.min(startIndex + rowsPerPage, apps.length);
   const currentApps = apps.slice(startIndex, endIndex);
 
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
@@ -52,45 +38,40 @@ export function DataIngestionTable({ apps, onRefresh, onDelete }: DataIngestionT
 
   return (
     <div className="bg-white w-full">
-      <div className="px-4 pt-4 pb-6">
-        <h3 className="font-['Inter'] font-medium text-base leading-7 text-[#161616]">
+      <div className="px-2 pt-2 pb-4">
+        <h3 className="font-['Inter'] font-medium text-sm leading-6 text-[#111827]">
           Data Ingestion Status
         </h3>
-        <p className="font-['Inter'] font-normal text-sm leading-[18px] tracking-[0.16px] text-[#525252]">
-          Reviews ingested for selected Apps (limited to 35 per app)
+        <p className="font-['Inter'] font-normal text-xs leading-4 tracking-[0.16px] text-[#6b7280]">
+          Limited reviews ingested for selected Apps
         </p>
       </div>
 
       <div className="w-full">
         {/* Table Header */}
-        <div className="flex bg-[#e0e0e0] h-12">
+        <div className="flex bg-[#e0e0e0] h-10">
           <div className="flex-1 flex items-center px-4">
-            <span className="font-['Inter'] font-semibold text-sm tracking-[0.16px] text-[#161616]">
+            <span className="font-['Inter'] font-semibold text-xs tracking-[0.16px] text-[#161616]">
               App Name
             </span>
           </div>
-          <div className="w-[180px] flex items-center px-4">
-            <span className="font-['Inter'] font-semibold text-sm tracking-[0.16px] text-[#161616]">
-              Country
-            </span>
-          </div>
           <div className="w-[200px] flex items-center px-4">
-            <span className="font-['Inter'] font-semibold text-sm tracking-[0.16px] text-[#161616]">
+            <span className="font-['Inter'] font-semibold text-xs tracking-[0.16px] text-[#161616]">
               Last Ingestion
             </span>
           </div>
           <div className="w-[140px] flex items-center px-4">
-            <span className="font-['Inter'] font-semibold text-sm tracking-[0.16px] text-[#161616]">
+            <span className="font-['Inter'] font-semibold text-xs tracking-[0.16px] text-[#161616]">
               Status
             </span>
           </div>
-          <div className="w-[100px] flex items-center px-4">
-            <span className="font-['Inter'] font-semibold text-sm tracking-[0.16px] text-[#161616]">
+          <div className="w-[120px] flex items-center px-4">
+            <span className="font-['Inter'] font-semibold text-xs tracking-[0.16px] text-[#161616]">
               #Records
             </span>
           </div>
-          <div className="w-[100px] flex items-center justify-end px-4">
-            <span className="font-['Inter'] font-semibold text-sm tracking-[0.16px] text-[#161616]">
+          <div className="w-[90px] flex items-center justify-end px-4">
+            <span className="font-['Inter'] font-semibold text-xs tracking-[0.16px] text-[#161616]">
               Action
             </span>
           </div>
@@ -98,53 +79,50 @@ export function DataIngestionTable({ apps, onRefresh, onDelete }: DataIngestionT
 
         {/* Table Body */}
         {currentApps.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-[#525252] text-sm">
+          <div className="flex items-center justify-center h-40 text-[#6b7280] text-xs">
             No apps added yet. Use the form above to add apps to monitor.
           </div>
         ) : (
           currentApps.map((app) => (
-            <div key={app.id} className="flex h-12 border-t border-[#e0e0e0] bg-white hover:bg-gray-50 transition-colors">
+            <div key={app.id} className="flex h-10 border-t border-[#e0e0e0] bg-white">
               <div className="flex-1 flex items-center px-4">
-                <span className="font-['Inter'] font-normal text-sm tracking-[0.16px] text-[#525252]">
+                <span className="font-['Inter'] font-normal text-xs tracking-[0.16px] text-[#525252]">
                   {app.appName}
                 </span>
               </div>
-              <div className="w-[180px] flex items-center px-4">
-                <span className="font-['Inter'] font-normal text-sm tracking-[0.16px] text-[#525252]">
-                  {app.country}
-                </span>
-              </div>
               <div className="w-[200px] flex items-center px-4">
-                <span className="font-['Inter'] font-normal text-sm tracking-[0.16px] text-[#525252]">
+                <span className="font-['Inter'] font-normal text-xs tracking-[0.16px] text-[#525252]">
                   {app.lastIngestion || '--'}
                 </span>
               </div>
               <div className="w-[140px] flex items-center px-4">
-                <StatusBadge status={app.status} />
+                <span className="font-['Inter'] font-normal text-xs tracking-[0.16px] text-[#525252]">
+                  {app.status}
+                </span>
               </div>
-              <div className="w-[100px] flex items-center px-4">
-                <span className="font-['Inter'] font-normal text-sm tracking-[0.16px] text-[#525252]">
+              <div className="w-[120px] flex items-center px-4">
+                <span className="font-['Inter'] font-normal text-xs tracking-[0.16px] text-[#525252]">
                   {app.records > 0 ? app.records.toLocaleString() : '--'}
                 </span>
               </div>
-              <div className="w-[100px] flex items-center justify-end gap-1 px-4">
+              <div className="w-[90px] flex items-center justify-end gap-1 px-4">
                 <button
                   onClick={() => onRefresh(app.id)}
                   disabled={isRefreshing(app.status)}
-                  className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Refresh reviews"
                   title="Refresh reviews"
                 >
-                  <RefreshCw className={`w-4 h-4 text-[#161616] ${isRefreshing(app.status) ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 text-[#161616] ${isRefreshing(app.status) ? 'animate-spin' : ''}`} />
                 </button>
                 <button
                   onClick={() => onDelete(app.id)}
                   disabled={isRefreshing(app.status)}
-                  className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Delete app"
                   title="Delete app"
                 >
-                  <Trash2 className="w-4 h-4 text-[#161616]" />
+                  <Trash2 className="w-3.5 h-3.5 text-[#161616]" />
                 </button>
               </div>
             </div>

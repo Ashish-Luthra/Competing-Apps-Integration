@@ -5,7 +5,7 @@
  * Replace these functions with real API calls when backend is ready
  */
 
-export type IngestionStatus = 'Pending' | 'In Progress' | 'Completed' | 'Failed';
+import type { IngestionStatus } from '@/types/app';
 
 export interface IngestionResult {
   records: number;
@@ -23,6 +23,10 @@ export interface AppInfo {
  * Generates a unique ID for new apps
  */
 export function generateAppId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `app_${crypto.randomUUID()}`;
+  }
+
   return `app_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
@@ -126,10 +130,20 @@ export async function ingestReviewsForAllApps(
 ): Promise<Map<string, IngestionResult>> {
   const results = new Map<string, IngestionResult>();
 
-  // Process all apps in parallel
+  const buildFailedResult = (): IngestionResult => ({
+    records: 0,
+    status: 'Failed',
+    lastIngestion: formatIngestionDate(new Date())
+  });
+
+  // Process all apps in parallel, but isolate failures per app
   const promises = appIds.map(async (appId) => {
-    const result = await refreshAppReviews(appId);
-    results.set(appId, result);
+    try {
+      const result = await refreshAppReviews(appId);
+      results.set(appId, result);
+    } catch {
+      results.set(appId, buildFailedResult());
+    }
   });
 
   await Promise.all(promises);
